@@ -6,14 +6,12 @@
 package runtime
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
 
 	global_config "github.com/dapr/dapr/pkg/config"
-	"github.com/dapr/dapr/pkg/cors"
 	"github.com/dapr/dapr/pkg/grpc"
 	"github.com/dapr/dapr/pkg/logger"
 	"github.com/dapr/dapr/pkg/metrics"
@@ -25,48 +23,28 @@ import (
 )
 
 // FromFlags parses command flags and returns DaprRuntime instance
-func FromFlags() (*DaprRuntime, error) {
-	mode := flag.String("mode", string(modes.StandaloneMode), "Runtime mode for Dapr")
-	daprHTTPPort := flag.String("dapr-http-port", fmt.Sprintf("%v", DefaultDaprHTTPPort), "HTTP port for Dapr API to listen on")
-	daprAPIGRPCPort := flag.String("dapr-grpc-port", fmt.Sprintf("%v", DefaultDaprAPIGRPCPort), "gRPC port for the Dapr API to listen on")
-	daprInternalGRPCPort := flag.String("dapr-internal-grpc-port", "", "gRPC port for the Dapr Internal API to listen on")
-	appPort := flag.String("app-port", "", "The port the application is listening on")
-	profilePort := flag.String("profile-port", fmt.Sprintf("%v", DefaultProfilePort), "The port for the profile server")
-	appProtocol := flag.String("app-protocol", string(HTTPProtocol), "Protocol for the application: grpc or http")
-	componentsPath := flag.String("components-path", "", "Path for components directory. If empty, components will not be loaded. Self-hosted mode only")
-	config := flag.String("config", "", "Path to config file, or name of a configuration object")
-	appID := flag.String("app-id", "", "A unique ID for Dapr. Used for Service Discovery and state")
-	controlPlaneAddress := flag.String("control-plane-address", "", "Address for a Dapr control plane")
-	sentryAddress := flag.String("sentry-address", "", "Address for the Sentry CA service")
-	placementServiceHostAddr := flag.String("placement-host-address", "", "Addresses for Dapr Actor Placement servers")
-	allowedOrigins := flag.String("allowed-origins", cors.DefaultAllowedOrigins, "Allowed HTTP origins")
-	enableProfiling := flag.Bool("enable-profiling", false, "Enable profiling")
-	runtimeVersion := flag.Bool("version", false, "Prints the runtime version")
-	appMaxConcurrency := flag.Int("app-max-concurrency", -1, "Controls the concurrency level when forwarding requests to user code")
-	enableMTLS := flag.Bool("enable-mtls", false, "Enables automatic mTLS for daprd to daprd communication channels")
-	appSSL := flag.Bool("app-ssl", false, "Sets the URI scheme of the app to https and attempts an SSL connection")
+func FromFlags(mode, daprHTTPPort,daprAPIGRPCPort,daprInternalGRPCPort,appPort,profilePort,appProtocol,componentsPath,config,appID,controlPlaneAddress,sentryAddress,
+	placementServiceHostAddr,allowedOrigins string, enableProfiling,runtimeVersion bool,appMaxConcurrency int,enableMTLS,appSSL bool, flagLogLevel string, logAsJson bool, metricsPort string) (*DaprRuntime, error) {
 
 	loggerOptions := logger.DefaultOptions()
-	loggerOptions.AttachCmdFlags(flag.StringVar, flag.BoolVar)
-
 	metricsExporter := metrics.NewExporter(metrics.DefaultMetricNamespace)
 
-	// attaching only metrics-port option
-	metricsExporter.Options().AttachCmdFlag(flag.StringVar)
 
-	flag.Parse()
+	loggerOptions.OutputLevel = flagLogLevel
+	loggerOptions.JSONFormatEnabled = logAsJson
+	metricsExporter.Options().MetricsPort = metricsPort
 
-	if *runtimeVersion {
+	if runtimeVersion {
 		fmt.Println(version.Version())
 		os.Exit(0)
 	}
 
-	if *appID == "" {
+	if appID == "" {
 		return nil, errors.New("app-id parameter cannot be empty")
 	}
 
 	// Apply options to all loggers
-	loggerOptions.SetAppID(*appID)
+	loggerOptions.SetAppID(appID)
 	if err := logger.ApplyOptionsToLoggers(&loggerOptions); err != nil {
 		return nil, err
 	}
@@ -79,24 +57,24 @@ func FromFlags() (*DaprRuntime, error) {
 		log.Fatal(err)
 	}
 
-	daprHTTP, err := strconv.Atoi(*daprHTTPPort)
+	daprHTTP, err := strconv.Atoi(daprHTTPPort)
 	if err != nil {
 		return nil, errors.Wrap(err, "error parsing dapr-http-port flag")
 	}
 
-	daprAPIGRPC, err := strconv.Atoi(*daprAPIGRPCPort)
+	daprAPIGRPC, err := strconv.Atoi(daprAPIGRPCPort)
 	if err != nil {
 		return nil, errors.Wrap(err, "error parsing dapr-grpc-port flag")
 	}
 
-	profPort, err := strconv.Atoi(*profilePort)
+	profPort, err := strconv.Atoi(profilePort)
 	if err != nil {
 		return nil, errors.Wrap(err, "error parsing profile-port flag")
 	}
 
 	var daprInternalGRPC int
-	if *daprInternalGRPCPort != "" {
-		daprInternalGRPC, err = strconv.Atoi(*daprInternalGRPCPort)
+	if daprInternalGRPCPort != "" {
+		daprInternalGRPC, err = strconv.Atoi(daprInternalGRPCPort)
 		if err != nil {
 			return nil, errors.Wrap(err, "error parsing dapr-internal-grpc-port")
 		}
@@ -108,35 +86,35 @@ func FromFlags() (*DaprRuntime, error) {
 	}
 
 	var applicationPort int
-	if *appPort != "" {
-		applicationPort, err = strconv.Atoi(*appPort)
+	if appPort != "" {
+		applicationPort, err = strconv.Atoi(appPort)
 		if err != nil {
 			return nil, errors.Wrap(err, "error parsing app-port")
 		}
 	}
 
 	placementAddresses := []string{}
-	if *placementServiceHostAddr != "" {
-		placementAddresses = parsePlacementAddr(*placementServiceHostAddr)
+	if placementServiceHostAddr != "" {
+		placementAddresses = parsePlacementAddr(placementServiceHostAddr)
 	}
 
 	var concurrency int
-	if *appMaxConcurrency != -1 {
-		concurrency = *appMaxConcurrency
+	if appMaxConcurrency != -1 {
+		concurrency = appMaxConcurrency
 	}
 
 	appPrtcl := string(HTTPProtocol)
-	if *appProtocol != string(HTTPProtocol) {
-		appPrtcl = *appProtocol
+	if appProtocol != string(HTTPProtocol) {
+		appPrtcl = appProtocol
 	}
 
-	runtimeConfig := NewRuntimeConfig(*appID, placementAddresses, *controlPlaneAddress, *allowedOrigins, *config, *componentsPath,
-		appPrtcl, *mode, daprHTTP, daprInternalGRPC, daprAPIGRPC, applicationPort, profPort, *enableProfiling, concurrency, *enableMTLS, *sentryAddress, *appSSL)
+	runtimeConfig := NewRuntimeConfig(appID, placementAddresses, controlPlaneAddress, allowedOrigins, config, componentsPath,
+		appPrtcl, mode, daprHTTP, daprInternalGRPC, daprAPIGRPC, applicationPort, profPort, enableProfiling, concurrency, enableMTLS, sentryAddress, appSSL)
 
 	var globalConfig *global_config.Configuration
 	var configErr error
 
-	if *enableMTLS {
+	if enableMTLS {
 		runtimeConfig.CertChain, err = security.GetCertChain()
 		if err != nil {
 			return nil, err
@@ -146,18 +124,18 @@ func FromFlags() (*DaprRuntime, error) {
 	var accessControlList *global_config.AccessControlList
 	var namespace string
 
-	if *config != "" {
-		switch modes.DaprMode(*mode) {
+	if config != "" {
+		switch modes.DaprMode(mode) {
 		case modes.KubernetesMode:
-			client, conn, clientErr := client.GetOperatorClient(*controlPlaneAddress, security.TLSServerName, runtimeConfig.CertChain)
+			client, conn, clientErr := client.GetOperatorClient(controlPlaneAddress, security.TLSServerName, runtimeConfig.CertChain)
 			if clientErr != nil {
 				return nil, clientErr
 			}
 			defer conn.Close()
 			namespace = os.Getenv("NAMESPACE")
-			globalConfig, configErr = global_config.LoadKubernetesConfiguration(*config, namespace, client)
+			globalConfig, configErr = global_config.LoadKubernetesConfiguration(config, namespace, client)
 		case modes.StandaloneMode:
-			globalConfig, _, configErr = global_config.LoadStandaloneConfiguration(*config)
+			globalConfig, _, configErr = global_config.LoadStandaloneConfiguration(config)
 		}
 
 		if configErr != nil {

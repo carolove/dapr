@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	defaultMetricsPort    = "9090"
-	defaultMetricsEnabled = true
+	DefaultMetricsPort    = "9090"
+	DefaultMetricsEnabled = true
 )
 
 // Options defines the sets of options for Dapr logging
@@ -19,22 +19,22 @@ type Options struct {
 	// OutputLevel is the level of logging
 	MetricsEnabled bool
 
-	metricsPort string
+	MetricsPort string
 }
 
 func defaultMetricOptions() *Options {
 	return &Options{
-		metricsPort:    defaultMetricsPort,
-		MetricsEnabled: defaultMetricsEnabled,
+		MetricsPort:    DefaultMetricsPort,
+		MetricsEnabled: DefaultMetricsEnabled,
 	}
 }
 
-// MetricsPort gets metrics port.
-func (o *Options) MetricsPort() uint64 {
-	port, err := strconv.ParseUint(o.metricsPort, 10, 64)
+// GetMetricsPort gets metrics port.
+func (o *Options) GetMetricsPort() uint64 {
+	port, err := strconv.ParseUint(o.MetricsPort, 10, 64)
 	if err != nil {
 		// Use default metrics port as a fallback
-		port, _ = strconv.ParseUint(defaultMetricsPort, 10, 64)
+		port, _ = strconv.ParseUint(DefaultMetricsPort, 10, 64)
 	}
 
 	return port
@@ -45,14 +45,14 @@ func (o *Options) AttachCmdFlags(
 	stringVar func(p *string, name string, value string, usage string),
 	boolVar func(p *bool, name string, value bool, usage string)) {
 	stringVar(
-		&o.metricsPort,
+		&o.MetricsPort,
 		"metrics-port",
-		defaultMetricsPort,
+		DefaultMetricsPort,
 		"The port for the metrics server")
 	boolVar(
 		&o.MetricsEnabled,
 		"enable-metrics",
-		defaultMetricsEnabled,
+		DefaultMetricsEnabled,
 		"Enable prometheus metric")
 }
 
@@ -60,8 +60,8 @@ func (o *Options) AttachCmdFlags(
 func (o *Options) AttachCmdFlag(
 	stringVar func(p *string, name string, value string, usage string)) {
 	stringVar(
-		&o.metricsPort,
+		&o.MetricsPort,
 		"metrics-port",
-		defaultMetricsPort,
+		DefaultMetricsPort,
 		"The port for the metrics server")
 }

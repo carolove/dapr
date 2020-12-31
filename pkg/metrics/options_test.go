@@ -15,8 +15,8 @@ import (
 func TestOptions(t *testing.T) {
 	t.Run("default options", func(t *testing.T) {
 		o := defaultMetricOptions()
-		assert.Equal(t, defaultMetricsPort, o.metricsPort)
-		assert.Equal(t, defaultMetricsEnabled, o.MetricsEnabled)
+		assert.Equal(t, DefaultMetricsPort, o.MetricsPort)
+		assert.Equal(t, DefaultMetricsEnabled, o.MetricsEnabled)
 	})
 
 	t.Run("attaching metrics related cmd flags", func(t *testing.T) {
@@ -24,14 +24,14 @@ func TestOptions(t *testing.T) {
 
 		metricsPortAsserted := false
 		testStringVarFn := func(p *string, name string, value string, usage string) {
-			if name == "metrics-port" && value == defaultMetricsPort {
+			if name == "metrics-port" && value == DefaultMetricsPort {
 				metricsPortAsserted = true
 			}
 		}
 
 		metricsEnabledAsserted := false
 		testBoolVarFn := func(p *bool, name string, value bool, usage string) {
-			if name == "enable-metrics" && value == defaultMetricsEnabled {
+			if name == "enable-metrics" && value == DefaultMetricsEnabled {
 				metricsEnabledAsserted = true
 			}
 		}
@@ -45,22 +45,22 @@ func TestOptions(t *testing.T) {
 
 	t.Run("parse valid port", func(t *testing.T) {
 		o := Options{
-			metricsPort:    "1010",
+			MetricsPort:    "1010",
 			MetricsEnabled: false,
 		}
 
-		assert.Equal(t, uint64(1010), o.MetricsPort())
+		assert.Equal(t, uint64(1010), o.GetMetricsPort())
 	})
 
 	t.Run("return default port if port is invalid", func(t *testing.T) {
 		o := Options{
-			metricsPort:    "invalid",
+			MetricsPort:    "invalid",
 			MetricsEnabled: false,
 		}
 
-		defaultPort, _ := strconv.ParseUint(defaultMetricsPort, 10, 64)
+		defaultPort, _ := strconv.ParseUint(DefaultMetricsPort, 10, 64)
 
-		assert.Equal(t, defaultPort, o.MetricsPort())
+		assert.Equal(t, defaultPort, o.GetMetricsPort())
 	})
 
 	t.Run("attaching single metrics related cmd flag", func(t *testing.T) {
@@ -68,7 +68,7 @@ func TestOptions(t *testing.T) {
 
 		metricsPortAsserted := false
 		testStringVarFn := func(p *string, name string, value string, usage string) {
-			if name == "metrics-port" && value == defaultMetricsPort {
+			if name == "metrics-port" && value == DefaultMetricsPort {
 				metricsPortAsserted = true
 			}
 		}

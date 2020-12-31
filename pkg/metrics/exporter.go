@@ -91,7 +91,7 @@ func (m *promMetricsExporter) startMetricServer() error {
 		return nil
 	}
 
-	addr := fmt.Sprintf(":%d", m.options.MetricsPort())
+	addr := fmt.Sprintf(":%d", m.options.GetMetricsPort())
 
 	if m.ocExporter == nil {
 		return errors.New("exporter was not initialized")

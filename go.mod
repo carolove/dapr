@@ -35,6 +35,7 @@ require (
 	github.com/prometheus/common v0.14.0
 	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.6.1
+	github.com/urfave/cli v1.22.1
 	github.com/valyala/fasthttp v1.16.0
 	github.com/yuin/gopher-lua v0.0.0-20200603152657-dc2b0ca8b37e // indirect
 	go.opencensus.io v0.22.5
@@ -49,14 +50,17 @@ require (
 	k8s.io/apiextensions-apiserver v0.20.0
 	k8s.io/apimachinery v0.20.0
 	k8s.io/cli-runtime v0.20.0
-	k8s.io/client-go v0.20.0
+	k8s.io/client-go v8.0.0+incompatible
 	k8s.io/code-generator v0.20.0
+	k8s.io/component-base v0.20.0
 	k8s.io/klog v1.0.0
 	k8s.io/metrics v0.20.0
+	mosn.io/mosn v0.19.0
 	sigs.k8s.io/controller-runtime v0.7.0
 )
 
 replace (
 	gopkg.in/couchbaselabs/gocbconnstr.v1 => github.com/couchbaselabs/gocbconnstr v1.0.5
 	k8s.io/client => github.com/kubernetes-client/go v0.0.0-20190928040339-c757968c4c36
+	k8s.io/client-go => k8s.io/client-go v0.20.0
 )
