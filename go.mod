@@ -66,4 +66,5 @@ replace (
 	gopkg.in/couchbaselabs/gocbconnstr.v1 => github.com/couchbaselabs/gocbconnstr v1.0.5
 	k8s.io/client => github.com/kubernetes-client/go v0.0.0-20190928040339-c757968c4c36
 	k8s.io/client-go => k8s.io/client-go v0.20.0
+	mosn.io/mosn v0.20.0 => github.com/carolove/mosn v0.0.0-20210106063210-05349fa58819
 )
