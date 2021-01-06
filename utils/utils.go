@@ -6,7 +6,6 @@
 package utils
 
 import (
-	"flag"
 	"fmt"
 	"path/filepath"
 	"time"
@@ -36,17 +35,11 @@ func GetConfig() *rest.Config {
 		return kubeConfig
 	}
 
-	var kubeconfig *string
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
+	kubeconfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
 
 	conf, err := rest.InClusterConfig()
 	if err != nil {
-		conf, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
+		conf, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
 			panic(err)
 		}

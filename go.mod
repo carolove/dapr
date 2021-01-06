@@ -40,10 +40,12 @@ require (
 	github.com/yuin/gopher-lua v0.0.0-20200603152657-dc2b0ca8b37e // indirect
 	go.opencensus.io v0.22.5
 	go.opentelemetry.io/otel v0.13.0
-	go.uber.org/atomic v1.6.0
+	go.uber.org/atomic v1.7.0
 	google.golang.org/genproto v0.0.0-20201110150050-8816d57aaa9a
 	google.golang.org/grpc v1.33.1
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
+	gopkg.in/couchbaselabs/gocbconnstr.v1 v1.0.0-00010101000000-000000000000 // indirect
+	gopkg.in/couchbaselabs/jsonx.v1 v1.0.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.20.0
@@ -52,14 +54,15 @@ require (
 	k8s.io/cli-runtime v0.20.0
 	k8s.io/client-go v8.0.0+incompatible
 	k8s.io/code-generator v0.20.0
-	k8s.io/component-base v0.20.0
+	k8s.io/component-base v0.20.0 // indirect
 	k8s.io/klog v1.0.0
 	k8s.io/metrics v0.20.0
-	mosn.io/mosn v0.19.0
+	mosn.io/mosn v0.20.0
 	sigs.k8s.io/controller-runtime v0.7.0
 )
 
 replace (
+	github.com/dapr/components-contrib => github.com/carolove/components-contrib v0.0.0-20210105114242-8a0b44e39c9d
 	gopkg.in/couchbaselabs/gocbconnstr.v1 => github.com/couchbaselabs/gocbconnstr v1.0.5
 	k8s.io/client => github.com/kubernetes-client/go v0.0.0-20190928040339-c757968c4c36
 	k8s.io/client-go => k8s.io/client-go v0.20.0

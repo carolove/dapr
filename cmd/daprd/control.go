@@ -8,9 +8,9 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
+	rawruntime "runtime"
 	"syscall"
 	"time"
-	rawruntime "runtime"
 
 	"github.com/dapr/dapr/pkg/cors"
 	"github.com/dapr/dapr/pkg/metrics"
@@ -222,7 +222,7 @@ var (
 			},
 
 			cli.StringFlag{
-				Name:   "mosn-config, mc",
+				Name:   "mosn-config, c",
 				Usage:  "Load configuration from `FILE`",
 				EnvVar: "MOSN_CONFIG",
 				Value:  "configs/mosn_config.json",
@@ -294,6 +294,12 @@ var (
 			}, cli.IntFlag{
 				Name:  "concurrency",
 				Usage: "concurrency, align to Istio startup params, currently useless",
+			}, cli.StringFlag{
+				Name:  "log-format-prefix-with-location",
+				Usage: "og-format-prefix-with-location, currently useless",
+			}, cli.IntFlag{
+				Name:  "bootstrap-version",
+				Usage: "bootstrap-version, align to Istio startup params, currently useless",
 			},
 		},
 		Action: func(c *cli.Context) error {
@@ -333,6 +339,8 @@ var (
 			podIp := c.String("pod-ip")
 			flagLogLevel := c.String("log-level")
 			featureGates := c.String("feature-gates")
+
+			go startMosn(configPath, serviceCluster, serviceNode, serviceType, serviceMeta, serviceLabels, clusterDomain, podName, podNamespace, podIp, flagLogLevel, featureGates)
 
 			rt, err := runtime.FromFlags(mode, daprHTTPPort, daprAPIGRPCPort, daprInternalGRPCPort, appPort, profilePort, appProtocol, componentsPath, config,
 				appID, controlPlaneAddress, sentryAddress, placementServiceHostAddr, allowedOrigins, enableProfiling,
@@ -628,7 +636,6 @@ var (
 			if err != nil {
 				log.Fatalf("fatal error from runtime: %s", err)
 			}
-			go startMosn(configPath, serviceCluster, serviceNode, serviceType, serviceMeta, serviceLabels, clusterDomain, podName, podNamespace, podIp, flagLogLevel, featureGates)
 
 			stop := make(chan os.Signal, 1)
 			signal.Notify(stop, syscall.SIGTERM, os.Interrupt)
