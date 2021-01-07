@@ -337,14 +337,14 @@ var (
 			podName := c.String("pod-name")
 			podNamespace := c.String("pod-namespace")
 			podIp := c.String("pod-ip")
-			flagLogLevel := c.String("log-level")
+			// flagLogLevel := c.String("log-level")
 			featureGates := c.String("feature-gates")
 
-			go startMosn(configPath, serviceCluster, serviceNode, serviceType, serviceMeta, serviceLabels, clusterDomain, podName, podNamespace, podIp, flagLogLevel, featureGates)
+			go startMosn(configPath, serviceCluster, serviceNode, serviceType, serviceMeta, serviceLabels, clusterDomain, podName, podNamespace, podIp, "warning", featureGates)
 
 			rt, err := runtime.FromFlags(mode, daprHTTPPort, daprAPIGRPCPort, daprInternalGRPCPort, appPort, profilePort, appProtocol, componentsPath, config,
 				appID, controlPlaneAddress, sentryAddress, placementServiceHostAddr, allowedOrigins, enableProfiling,
-				runtimeVersion, appMaxConcurrency, enableMTLS, appSSL, flagLogLevel, logAsJson, metricsPort)
+				runtimeVersion, appMaxConcurrency, enableMTLS, appSSL, "debug", logAsJson, metricsPort)
 
 			if err != nil {
 				log.Fatal(err)
@@ -467,10 +467,10 @@ var (
 					nr_loader.New("mdns", func() nr.Resolver {
 						return nr_mdns.NewResolver(logContrib)
 					}),
-					nr_loader.New("kubernetes", func() nr.Resolver {
+					nr_loader.New("mesh", func() nr.Resolver {
 						return nr_kubernetes.NewResolver(logContrib)
 					}),
-					nr_loader.New("mesh", func() nr.Resolver {
+					nr_loader.New("kubernetes", func() nr.Resolver {
 						return nr_mesh.NewResolver(logContrib)
 					}),
 				),
