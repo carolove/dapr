@@ -71,6 +71,8 @@ import (
 	nr_kubernetes "github.com/dapr/components-contrib/nameresolution/kubernetes"
 	nr_mdns "github.com/dapr/components-contrib/nameresolution/mdns"
 	nr_loader "github.com/dapr/dapr/pkg/components/nameresolution"
+	nr_mesh "github.com/dapr/dapr/pkg/components/nameresolution/mesh"
+	_ "google.golang.org/grpc/xds" // To install the xds resolvers and balancers.
 
 	// Bindings
 	"github.com/dapr/components-contrib/bindings"
@@ -253,6 +255,9 @@ func main() {
 			}),
 			nr_loader.New("kubernetes", func() nr.Resolver {
 				return nr_kubernetes.NewResolver(logContrib)
+			}),
+			nr_loader.New("mesh", func() nr.Resolver {
+				return nr_mesh.NewResolver(logContrib)
 			}),
 		),
 		runtime.WithInputBindings(

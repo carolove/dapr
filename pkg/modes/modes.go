@@ -11,6 +11,8 @@ type DaprMode string
 const (
 	// KubernetesMode is a Kubernetes Dapr mode
 	KubernetesMode DaprMode = "kubernetes"
+	// MeshMode is a Kubernetes Mesh Dapr mode
+	KubernetesMeshMode DaprMode = "mesh"
 	// StandaloneMode is a Standalone Dapr mode
 	StandaloneMode DaprMode = "standalone"
 )

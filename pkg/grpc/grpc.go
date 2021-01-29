@@ -9,6 +9,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -117,8 +118,11 @@ func (g *Manager) GetGRPCConnection(address, id string, namespace string, skipTL
 			InsecureSkipVerify: true,
 		})))
 	}
-
-	conn, err := grpc.DialContext(ctx, dialPrefix+address, opts...)
+	target := dialPrefix + address
+	if strings.Contains(address, "127.0.0.1") || strings.Contains(address, "localhost") {
+		target = address
+	}
+	conn, err := grpc.DialContext(ctx, target, opts...)
 	if err != nil {
 		g.lock.Unlock()
 		return nil, err

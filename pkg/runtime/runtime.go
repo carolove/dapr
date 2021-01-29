@@ -157,11 +157,15 @@ type componentPreprocessRes struct {
 
 // NewDaprRuntime returns a new runtime with the given runtime config and global config
 func NewDaprRuntime(runtimeConfig *Config, globalConfig *config.Configuration, accessControlList *config.AccessControlList) *DaprRuntime {
+	mode := runtimeConfig.Mode
+	if runtimeConfig.Mode == modes.KubernetesMode && runtimeConfig.MeshEnabled {
+		mode = modes.KubernetesMeshMode
+	}
 	return &DaprRuntime{
 		runtimeConfig:          runtimeConfig,
 		globalConfig:           globalConfig,
 		accessControlList:      accessControlList,
-		grpc:                   grpc.NewGRPCManager(runtimeConfig.Mode),
+		grpc:                   grpc.NewGRPCManager(mode),
 		json:                   jsoniter.ConfigFastest,
 		inputBindings:          map[string]bindings.InputBinding{},
 		outputBindings:         map[string]bindings.OutputBinding{},
@@ -1043,10 +1047,16 @@ func (a *DaprRuntime) initNameResolution() error {
 	var resolver nr.Resolver
 	var err error
 	var resolverMetadata = nr.Metadata{}
-
-	switch a.runtimeConfig.Mode {
+	mode := a.runtimeConfig.Mode
+	if a.runtimeConfig.MeshEnabled {
+		mode = modes.KubernetesMeshMode
+	}
+	log.Infof("[initNameResolution] mode:%v", mode)
+	switch mode {
 	case modes.KubernetesMode:
 		resolver, err = a.nameResolutionRegistry.Create("kubernetes", "v1")
+	case modes.KubernetesMeshMode:
+		resolver, err = a.nameResolutionRegistry.Create("mesh", "v1")
 	case modes.StandaloneMode:
 		resolver, err = a.nameResolutionRegistry.Create("mdns", "v1")
 		// properties to register mDNS instances.

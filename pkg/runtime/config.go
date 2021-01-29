@@ -42,6 +42,7 @@ type Config struct {
 	ApplicationPort      int
 	ApplicationProtocol  Protocol
 	Mode                 modes.DaprMode
+	MeshEnabled          bool
 	PlacementAddresses   []string
 	GlobalConfig         string
 	AllowedOrigins       string
@@ -58,7 +59,7 @@ type Config struct {
 // NewRuntimeConfig returns a new runtime config
 func NewRuntimeConfig(
 	id string, placementAddresses []string,
-	controlPlaneAddress, allowedOrigins, globalConfig, componentsPath, appProtocol, mode string,
+	controlPlaneAddress, allowedOrigins, globalConfig, componentsPath, appProtocol, mode string, meshEnabled bool,
 	httpPort, internalGRPCPort, apiGRPCPort, appPort, profilePort int,
 	enableProfiling bool, maxConcurrency int, mtlsEnabled bool, sentryAddress string, appSSL bool, maxRequestBodySize int) *Config {
 	return &Config{
@@ -70,6 +71,7 @@ func NewRuntimeConfig(
 		ProfilePort:         profilePort,
 		ApplicationProtocol: Protocol(appProtocol),
 		Mode:                modes.DaprMode(mode),
+		MeshEnabled:         meshEnabled,
 		PlacementAddresses:  placementAddresses,
 		GlobalConfig:        globalConfig,
 		AllowedOrigins:      allowedOrigins,

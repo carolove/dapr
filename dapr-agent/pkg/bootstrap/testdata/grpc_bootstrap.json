@@ -1,0 +1,35 @@
+{
+  "xds_servers": [
+    {
+      "server_uri": {{ .discovery_address }},
+      "channel_creds": [
+        {
+          "type": {{ .discovery_channel_creds }}
+        }
+      ],
+      "server_features":, {{ .server_features_str }}
+    }
+  ],
+  "node": {
+    "id": "{{ .nodeID }}",
+    "cluster": "{{ .cluster }}",
+    "locality": {
+      {{- if .region }}
+      "region": "{{ .region }}"
+      {{- end }}
+      {{- if .zone }}
+      {{- if .region }}
+      ,
+      {{- end }}
+      "zone": "{{ .zone }}"
+      {{- end }}
+      {{- if .sub_zone }}
+      {{- if or .region .zone }}
+      ,
+      {{- end }}
+      "sub_zone": "{{ .sub_zone }}"
+      {{- end }}
+    },
+    "metadata": {{ .meta_json_str }}
+    }
+}

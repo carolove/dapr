@@ -36,6 +36,7 @@ const (
 	daprAppProtocolKey                = "dapr.io/app-protocol"
 	appIDKey                          = "dapr.io/app-id"
 	daprEnableProfilingKey            = "dapr.io/enable-profiling"
+	daprEnableMeshKey                 = "dapr.io/enable-mesh"
 	daprLogLevel                      = "dapr.io/log-level"
 	daprAPITokenSecret                = "dapr.io/api-token-secret" /* #nosec */
 	daprAppTokenSecret                = "dapr.io/app-token-secret" /* #nosec */
@@ -303,6 +304,10 @@ func profilingEnabled(annotations map[string]string) bool {
 	return getBoolAnnotationOrDefault(annotations, daprEnableProfilingKey, false)
 }
 
+func meshEnabled(annotations map[string]string) bool {
+	return getBoolAnnotationOrDefault(annotations, daprEnableMeshKey, false)
+}
+
 func appSSLEnabled(annotations map[string]string) bool {
 	return getBoolAnnotationOrDefault(annotations, daprAppSSLKey, defaultAppSSL)
 }
@@ -523,6 +528,38 @@ func getSidecarContainer(annotations map[string]string, id, daprSidecarImage, im
 				Name:  "NAMESPACE",
 				Value: namespace,
 			},
+			{
+				Name: "POD_NAME",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						FieldPath: "metadata.name",
+					},
+				},
+			},
+			{
+				Name: "POD_NAMESPACE",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						FieldPath: "metadata.namespace",
+					},
+				},
+			},
+			{
+				Name: "INSTANCE_IP",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						FieldPath: "status.podIP",
+					},
+				},
+			},
+			{
+				Name: "SERVICE_ACCOUNT",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						FieldPath: "spec.serviceAccountName",
+					},
+				},
+			},
 		},
 		Args: []string{
 			"--mode", "kubernetes",
@@ -556,7 +593,42 @@ func getSidecarContainer(annotations map[string]string, id, daprSidecarImage, im
 			FailureThreshold:    getInt32AnnotationOrDefault(annotations, daprLivenessProbeThresholdKey, defaultHealthzProbeThreshold),
 		},
 	}
+	if meshEnabled(annotations) {
+		c.Command = []string{"/usr/local/bin/dapr-agent"}
+		c.Args = []string{
+			"proxy",
+			"--mode", "kubernetes",
+			"--dapr-http-port", fmt.Sprintf("%v", sidecarHTTPPort),
+			"--dapr-grpc-port", fmt.Sprintf("%v", sidecarAPIGRPCPort),
+			"--dapr-internal-grpc-port", fmt.Sprintf("%v", sidecarInternalGRPCPort),
+			"--app-port", appPortStr,
+			"--app-id", id,
+			"--control-plane-address", controlPlaneAddress,
+			"--app-protocol", getProtocol(annotations),
+			"--placement-host-address", placementServiceAddress,
+			"--config", getConfig(annotations),
+			"--log-level", getLogLevel(annotations),
+			"--app-max-concurrency", fmt.Sprintf("%v", maxConcurrency),
+			"--sentry-address", sentryAddress,
+			"--metrics-port", fmt.Sprintf("%v", metricsPort),
+			"--dapr-http-max-request-size", fmt.Sprintf("%v", requestBodySize),
+			"--enable-mesh",
+		}
 
+		c.Env = append(c.Env, corev1.EnvVar{
+			Name:  "GRPC_XDS_BOOTSTRAP",
+			Value: "/etc/dapr/runtime/grpc_bootstrap.json",
+		}, corev1.EnvVar{
+			Name:  "GRPC_GO_LOG_VERBOSITY_LEVEL",
+			Value: "99",
+		}, corev1.EnvVar{
+			Name:  "GRPC_GO_LOG_SEVERITY_LEVEL",
+			Value: "info",
+		}, corev1.EnvVar{
+			Name:  "GRPC_XDS_EXPERIMENTAL_V3_SUPPORT",
+			Value: "true",
+		})
+	}
 	if tokenVolumeMount != nil {
 		c.VolumeMounts = []corev1.VolumeMount{
 			*tokenVolumeMount,
